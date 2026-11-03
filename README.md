@@ -1,6 +1,6 @@
 # PingPong AI Marketplace
 
-Agent Skills for querying PingPong account balances and transaction records through MCP or the PingPong CLI.
+Agent Skills for MCP or the PingPong CLI.
 
 ## Plugins
 
@@ -14,9 +14,9 @@ All three tools belong to the business scope `reconciliation.read`.
 
 | Skill | MCP tool | Scope | Description |
 | --- | --- | --- | --- |
-| [pingpong-list-account-balances](./plugins/pingpong-cli/skills/pingpong-list-account-balances/SKILL.md) | `list_account_balances` | `reconciliation.read` | Query current account balances, with optional currency and funding-account filters. |
-| [pingpong-list-balance-movements](./plugins/pingpong-cli/skills/pingpong-list-balance-movements/SKILL.md) | `list_balance_movements` | `reconciliation.read` | Trace balance movements for an order or a defined time range. |
-| [pingpong-list-transaction-history](./plugins/pingpong-cli/skills/pingpong-list-transaction-history/SKILL.md) | `list_transaction_history` | `reconciliation.read` | Query transactions by business source, order, or time range. |
+| [list-account-balances](./plugins/pingpong-cli/skills/list-account-balances/SKILL.md) | `list_account_balances` | `reconciliation.read` | Query current account balances, with optional currency and funding-account filters. |
+| [list-balance-movements](./plugins/pingpong-cli/skills/list-balance-movements/SKILL.md) | `list_balance_movements` | `reconciliation.read` | Trace balance movements for an order or a defined time range. |
+| [list-transaction-history](./plugins/pingpong-cli/skills/list-transaction-history/SKILL.md) | `list_transaction_history` | `reconciliation.read` | Query transactions by business source, order, or time range. |
 
 Each Skill includes input constraints, execution steps, result interpretation, and troubleshooting. Business parameters use snake_case, such as `page_no`, `page_size`, and `order_id`.
 
@@ -47,7 +47,7 @@ claude plugin install pingpong-cli@pingpong-marketplace
 Enable the connection and complete OAuth. Skills use the plugin namespace; for example:
 
 ```text
-/pingpong-cli:pingpong-list-account-balances
+/pingpong-cli:list-account-balances
 ```
 
 ### Codex
