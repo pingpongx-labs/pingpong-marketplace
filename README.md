@@ -25,15 +25,15 @@ Both history tools require an order ID or a complete time range of at most 365 d
 ## Connectors
 
 - **MCP:** The plugin packages a remote MCP connection. Enable it in your agent and complete that client's OAuth flow.
-- **CLI:** Terminal-capable agents can use an installed and authenticated [PingPong CLI](https://github.com/pingpongx-labs/pingpong-cli) when you choose CLI execution. CLI installation and credentials are separate from the plugin.
+- **CLI:** Terminal-capable agents can use an installed and authenticated PingPong CLI when you choose CLI execution. See the [CLI guide](./docs/cli.md) for installation, environments, authentication, and commands. CLI installation and credentials are separate from the plugin.
 
 Skills use the configured MCP connection by default and include CLI equivalents. They do not silently switch connectors or environments. Installing a Skill alone does not authenticate an account or grant tool permissions.
 
 ## Installation
 
-This directory is prepared for local installation. A public marketplace Git URL and production MCP endpoint have not yet been confirmed for release.
+Choose sandbox or production before installing. This marketplace template does not select an environment automatically.
 
-Before installing, replace the placeholder URL in [the MCP configuration](./plugins/pingpong-cli/.mcp.json) with your confirmed MCP endpoint. The bundled `https://configure-before-use.invalid/mcp` address cannot connect. See [Setup](SETUP.md) for release preparation.
+[The MCP configuration](./plugins/pingpong-cli/.mcp.json) points to production at `https://mcp.pingpongx.com/mcp` by default. Complete OAuth for production after installation. For sandbox use, replace the URL with the sandbox MCP endpoint provided by your administrator. See [Environment configuration](SETUP.md#environments) for endpoints and setup.
 
 ### Claude Code
 
@@ -68,7 +68,7 @@ codex plugin marketplace add "${PINGPONG_MARKETPLACE_GIT_URL:?Set the published 
 codex plugin add pingpong-cli@pingpong-marketplace
 ```
 
-The CLI repository is a separate project; use it as a marketplace source only if it actually contains the marketplace manifests.
+The CLI guide is documentation only and does not add marketplace manifests; keep using this repository as the marketplace source.
 
 ### Cursor
 
@@ -122,6 +122,8 @@ pingpong --env demo balances list --page_no 1 --page_size 1
 ```
 
 Replace `demo` with your target environment.
+
+See the [CLI guide](./docs/cli.md) for installation, sign-in, environment selection, and troubleshooting.
 
 ## Updating and removing
 

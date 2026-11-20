@@ -1,0 +1,20 @@
+{
+  "name": "pingpong-marketplace",
+  "interface": {
+    "displayName": "PingPong"
+  },
+  "plugins": [
+    {
+      "name": "pingpong-cli",
+      "source": {
+        "source": "local",
+        "path": "./plugins/pingpong-cli"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Finance"
+    }
+  ]
+}

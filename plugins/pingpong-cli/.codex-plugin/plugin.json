@@ -1,0 +1,15 @@
+{
+  "name": "pingpong-cli",
+  "version": "0.1.1",
+  "description": "Query PingPong account balances, balance movements, and transaction history with read-only MCP tools.",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "PingPong CLI",
+    "shortDescription": "Read-only PingPong account queries via MCP.",
+    "category": "Finance",
+    "capabilities": [
+      "Read"
+    ]
+  }
+}

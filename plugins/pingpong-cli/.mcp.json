@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pingpong-cli": {
+      "type": "http",
+      "url": "https://mcp.pingpongx.com/mcp"
+    }
+  }
+}
