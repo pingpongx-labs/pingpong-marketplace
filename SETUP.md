@@ -18,7 +18,7 @@ The bundled configuration points to production at `https://mcp.pingpongx.com/mcp
 
 The configured URL determines the environment; the plugin name does not switch it. Authorize each environment separately. A release for a specific environment should clearly identify that environment and bundle its corresponding URL.
 
-For CLI usage, configure `PLATFORM_MCP_DEMO_URL` or `PLATFORM_MCP_PRODUCTION_URL` and select `--env demo` or `--env production`. The CLI's default profile is `demo`; profile defaults do not configure a plugin's MCP URL. See the [CLI guide](docs/cli.md) for installation, authentication, and troubleshooting.
+For the unified CLI entry, use the production MCP profile (`pingpong --env production ...`) and select sandbox or production business data in the browser authorization page. The CLI's default profile remains `demo` for direct demo access; it is not the profile to use when the authorization request may route to test/production by `client_id`. Profile defaults do not configure a plugin's MCP URL. See the [CLI guide](docs/cli.md) for installation, authentication, and troubleshooting.
 
 ## Install
 

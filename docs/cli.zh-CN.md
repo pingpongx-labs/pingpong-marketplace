@@ -8,7 +8,7 @@
 
 本文档说明独立 CLI。MCP 插件与 Skills 的安装、授权见 [marketplace README](../README.zh-CN.md)；CLI 与插件分开安装、分别保存凭据。
 
-默认连接 **demo（沙箱）**，正式环境使用 `--env production`。当前仅提供只读查询；可用工具和权限以所连接服务为准。
+CLI 仍兼容 demo MCP 直连；统一入口流程请固定连接生产 MCP，并在浏览器授权页选择沙箱或生产业务环境。省略 `--env` 时程序仍默认 demo，因此此流程请显式使用 `--env production`。当前仅提供只读查询；可用工具和权限以授权的业务环境及所连接服务为准。
 
 ## 目录
 
@@ -33,7 +33,7 @@
 - 可访问的 MCP 地址和可完成浏览器授权的账户。
 - 默认凭据存储依赖系统凭据库：macOS Keychain，或已安装并解锁的 Linux Secret Service（`secret-tool`）。Windows 和无凭据库的无头环境会明确失败，只有在接受风险后显式设置 `PLATFORM_MCP_CREDENTIAL_STORE=file` 才能使用文件存储。
 
-CLI 是 Node.js 包，不是按 CPU 架构分发的独立二进制。demo 默认地址为 `https://demo-mcp.pingpongx.com/mcp`，生产地址为 `https://mcp.pingpongx.com/mcp`；如果部署地址不同，可用对应环境变量或 `--url` 覆盖。
+CLI 是 Node.js 包，不是按 CPU 架构分发的独立二进制。统一入口使用的生产地址为 `https://mcp.pingpongx.com/mcp`；demo 直连地址为 `https://demo-mcp.pingpongx.com/mcp`。如果部署地址不同，可用对应环境变量或 `--url` 覆盖。CLI 的 `--env production` 选择 MCP/OAuth 服务入口；浏览器授权页选择的沙箱或生产环境决定业务授权记录和后续数据环境，两者不要混淆。
 
 ## 安装
 
@@ -95,18 +95,17 @@ source <(pingpong completion zsh)
 
 ## 登录与身份
 
-### 沙箱登录
+### 通过统一生产入口授权沙箱或生产业务环境
 
-使用默认 demo 地址可直接登录：
+保持 CLI 连接生产 MCP，在浏览器授权页选择要授权的业务环境。注册客户端、授权码签发和 token 兑换都会留在生产 MCP OAuth 服务；选择沙箱只决定业务授权落点及后续访问环境。
 
 ```sh
-pingpong --env demo auth login
+pingpong --env production auth login
 ```
 
-如需连接其他沙箱地址，先覆盖 `PLATFORM_MCP_DEMO_URL` 再登录：
+不要用 demo MCP 入口开始这条统一授权流程：其授权请求可能依据 `client_id` 转发到 test 或生产，导致授权码签发入口与 CLI token 兑换入口不一致。需要独立直连 demo 排障时，才单独使用 `--env demo`；该模式不等于从统一生产入口选择沙箱业务环境。
 
 ```sh
-export PLATFORM_MCP_DEMO_URL=https://your-demo-domain.example/mcp
 pingpong --env demo auth login
 ```
 
@@ -114,7 +113,7 @@ pingpong --env demo auth login
 
 每个环境 profile 支持可选的 `authorizationEndpoint`，可通过 `PLATFORM_MCP_DEMO_AUTHORIZATION_ENDPOINT` 或 `PLATFORM_MCP_PRODUCTION_AUTHORIZATION_ENDPOINT` 覆盖。未配置或为空时，使用 OAuth metadata 返回的授权地址。
 
-该项只改变浏览器打开的登录地址；客户端注册和 token 兑换仍使用发现的 OAuth 服务。`state`、PKCE、`scope`、`resource` 和 `bu=open-platform` 保持原有参数。指定页面需要支持接续此 OAuth 流程。
+该项只改变浏览器打开的登录地址；客户端注册和 token 兑换仍使用发现的 OAuth 服务。统一入口流程仅覆盖生产 profile 的登录页地址；不要把生产 profile 改为 test 或 demo 的授权服务器。`state`、PKCE、`scope`、`resource` 和 `bu=open-platform` 保持原有参数。指定页面需要支持接续此 OAuth 流程。
 
 ### 正式环境登录
 
@@ -123,12 +122,12 @@ export PLATFORM_MCP_PRODUCTION_URL=https://mcp.pingpongx.com/mcp
 pingpong --env production auth login
 ```
 
-浏览器中完成用户登录、关联账号选择与工具授权。CLI 使用环境配置的授权页面，正式环境默认为 `https://oauth.pingpongx.com/auth/authorize/mcp/environment?bu=open-platform`，可用 `PLATFORM_MCP_PRODUCTION_AUTHORIZATION_ENDPOINT` 覆盖。OAuth 使用授权码 + PKCE S256，完成本机回调。
+浏览器中完成用户登录、选择沙箱或生产业务环境、关联账号与工具授权。CLI 使用生产 MCP 的 OAuth 服务，正式环境默认为 `https://oauth.pingpongx.com/auth/authorize/mcp/environment?bu=open-platform`，可用 `PLATFORM_MCP_PRODUCTION_AUTHORIZATION_ENDPOINT` 覆盖。OAuth 使用授权码 + PKCE S256，完成本机回调。登录页选择的业务环境与 CLI `--env production` 选择的 MCP 入口相互独立。
 
 浏览器无法自动打开时：
 
 ```sh
-pingpong --env demo auth login --no-browser
+pingpong --env production auth login --no-browser
 ```
 
 在运行 CLI 的机器上手动打开输出链接。远程终端/容器的 localhost 不一定是浏览器所在机器，需确保回调可达。
@@ -136,7 +135,7 @@ pingpong --env demo auth login --no-browser
 ### 查看登录身份
 
 ```sh
-pingpong --env demo auth whoami
+pingpong --env production auth whoami
 pingpong --env production auth whoami
 ```
 
@@ -157,7 +156,7 @@ pingpong --env production auth whoami
 仅检查本地登录状态时仍可使用：
 
 ```sh
-pingpong --env demo auth status
+pingpong --env production auth status
 ```
 
 ### 环境与凭据
@@ -169,7 +168,7 @@ pingpong --env demo auth status
 
 环境优先级为 `--env` > `PLATFORM_MCP_ENV` > demo。显式选择环境时，地址优先级为 `--url` > 对应环境变量 > 内置配置，并忽略旧 `PLATFORM_MCP_URL`。未显式选择环境时，兼容旧变量，其优先于 demo 地址变量。远程地址要求 HTTPS。
 
-凭据按完整 MCP URL 隔离，默认保存到系统凭据库；`~/.platform-mcp/` 只存非敏感标记，可用 `PLATFORM_MCP_CONFIG_DIR` 指定目录。显式设置 `PLATFORM_MCP_CREDENTIAL_STORE=file` 才使用该目录存明文凭据；文件模式使用 0700 目录和 0600 文件，但不隔离同一系统用户下的其他进程。旧版 JSON 凭据会在首次读取时迁移到系统凭据库。登录要求服务端声明并签发 DPoP token，不会自动降级为 Bearer。当前没有 refresh token，到期后重新登录。CLI 不读取或改写 Codex、ChatGPT 等其他客户端凭据。
+凭据按完整 MCP URL 隔离，默认保存到系统凭据库；`~/.platform-mcp/` 只存非敏感标记，可用 `PLATFORM_MCP_CONFIG_DIR` 指定目录。显式设置 `PLATFORM_MCP_CREDENTIAL_STORE=file` 才使用该目录存明文凭据；文件模式使用 0700 目录和 0600 文件，但不隔离同一系统用户下的其他进程。旧版 JSON 凭据会在首次读取时迁移到系统凭据库。登录要求服务端声明并签发 DPoP token，不会自动降级为 Bearer。CLI 当前不保存 refresh token，access token 到期后重新登录；服务端授权会话默认绝对有效 7 天，refresh 不能延长会话，到期必须重新授权。CLI 不读取或改写 Codex、ChatGPT 等其他客户端凭据。
 
 ## 命令概览
 
@@ -191,15 +190,15 @@ pingpong --help
 pingpong --tree
 pingpong balances --tree
 pingpong balances list --help
-pingpong --env demo tools list
-pingpong --env demo tools describe list_account_balances
+pingpong --env production tools list
+pingpong --env production tools describe list_account_balances
 ```
 
 ### 查询余额
 
 ```sh
-pingpong --env demo balances list --page_no 1 --page_size 1
-pingpong --env demo tools call list_account_balances \
+pingpong --env production balances list --page_no 1 --page_size 1
+pingpong --env production tools call list_account_balances \
   --args '{"page_no":1,"page_size":1}'
 ```
 
@@ -208,7 +207,7 @@ pingpong --env demo tools call list_account_balances \
 ### 预览请求
 
 ```sh
-pingpong --env demo balances list --page_no 1 --page_size 1 --dry-run
+pingpong --env production balances list --page_no 1 --page_size 1 --dry-run
 ```
 
 `--dry-run` 仅本地预览 MCP 请求，需要目标 URL，但不联网、不读取凭据、不验证完整业务规则或权限。
@@ -216,7 +215,7 @@ pingpong --env demo balances list --page_no 1 --page_size 1 --dry-run
 服务端预览需要登录：
 
 ```sh
-pingpong --env demo tools call list_account_balances \
+pingpong --env production tools call list_account_balances \
   --args '{"page_no":1,"page_size":1,"dry_run":true}'
 ```
 
@@ -225,7 +224,7 @@ JSON 参数 `dry_run` 会调用 MCP 服务执行校验，返回下游请求预�
 ### 紧凑 JSON 与文件参数
 
 ```sh
-pingpong --env demo balances list --page_no 1 --page_size 1 --compact
+pingpong --env production balances list --page_no 1 --page_size 1 --compact
 ```
 
 也可以将参数写入 `request.json`：
@@ -235,7 +234,7 @@ pingpong --env demo balances list --page_no 1 --page_size 1 --compact
 ```
 
 ```sh
-pingpong --env demo tools call list_account_balances --args-file request.json
+pingpong --env production tools call list_account_balances --args-file request.json
 ```
 
 `--args`、`--args-file` 和业务参数 flags 不能混用。结果写 stdout，错误和登录提示写 stderr。工具返回 `isError=true` 时仍输出 JSON，退出码为 1。必须检查实际结果，不能仅以 HTTP 成功判断查询成功。
@@ -243,7 +242,7 @@ pingpong --env demo tools call list_account_balances --args-file request.json
 ### 查看 Schema
 
 ```sh
-pingpong --env demo balances list --schema-only
+pingpong --env production balances list --schema-only
 ```
 
 `--api-schema-only` 是别名，两者都需要登录，返回 MCP 工具 Schema，不是 OpenAPI，不执行工具。当前服务可能没有 outputSchema，部分枚举和跨字段约束需结合帮助及服务端错误提示。
@@ -264,7 +263,7 @@ pingpong --env demo balances list --schema-only
 ## 退出、撤销与卸载
 
 ```sh
-pingpong --env demo auth logout
+pingpong --env production auth logout
 ```
 
 撤销所选 URL 的当前服务端会话并清除本地凭据，不影响其他会话。远端撤销失败会明确提示并以非零状态退出；本地没有凭据不代表此前的所有授权都已撤销。CLI 只撤销当前登录会话，其他会话的撤销请联系服务维护者。

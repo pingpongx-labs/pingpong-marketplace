@@ -115,13 +115,13 @@ Use list_transaction_history for source GENERAL_ACCOUNT and order YOUR_ORDER_ID,
 with page_no=1 and page_size=20.
 ```
 
-Replace sample identifiers and sources with the actual values for your request. For CLI execution, after installing and authenticating the CLI in your chosen environment:
+Replace sample identifiers and sources with the actual values for your request. For CLI execution, authenticate through the production MCP unified entry and choose the business environment in the browser authorization page:
 
 ```sh
-pingpong --env demo balances list --page_no 1 --page_size 1
+pingpong --env production balances list --page_no 1 --page_size 1
 ```
 
-Replace `demo` with your target environment.
+The CLI environment selects the MCP/OAuth service; the browser selection determines whether the business data environment is sandbox or production.
 
 See the [CLI guide](./docs/cli.md) for installation, sign-in, environment selection, and troubleshooting.
 

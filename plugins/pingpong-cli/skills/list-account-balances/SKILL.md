@@ -36,17 +36,17 @@ Replace sample identifiers with the user's actual values. The example is not a l
 {"page_no":1,"page_size":1}
 ```
 
-If the user chooses CLI, replace demo with their selected configured environment:
+If the user chooses CLI, use the production MCP unified entry and select the business data environment in the browser authorization page:
 
 ```sh
-pingpong --env demo balances list --page_no 1 --page_size 1
+pingpong --env production balances list --page_no 1 --page_size 1
 ```
 
 For arrays or other filters, use a complete JSON object with --args or --args-file, not mixed with business parameter flags.
 
 ## Connection and execution
 
-Use the user's selected PingPong environment and account. In a plugin session, use its authenticated MCP connection. If the user explicitly chooses the CLI, use the commands below with that environment; do not silently switch connectors or environments. Skill installation and CLI login do not authenticate another MCP client.
+Use the user's selected PingPong environment and account. In a plugin session, use its authenticated MCP connection. If the user explicitly chooses the CLI, use the production MCP unified entry and the business environment selected during browser authorization; do not silently switch connectors. Skill installation and CLI login do not authenticate another MCP client.
 
 Read the live tool schema before execution and use only supported snake_case arguments. If it differs from this guide, follow the live contract and report the mismatch. Do not pass tokens, app secrets, private keys, gateway URLs, or signatures as business arguments. The server supplies upstream credentials.
 

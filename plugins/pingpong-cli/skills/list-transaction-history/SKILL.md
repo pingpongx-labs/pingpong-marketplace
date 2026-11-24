@@ -39,17 +39,17 @@ Replace sample identifiers with the user's actual values. The example is not a l
 {"source":"GENERAL_ACCOUNT","order_id":"YOUR_ORDER_ID","page_no":1,"page_size":20}
 ```
 
-If the user chooses CLI, replace demo with their selected configured environment:
+If the user chooses CLI, use the production MCP unified entry and select the business data environment in the browser authorization page:
 
 ```sh
-pingpong --env demo transactions list --source GENERAL_ACCOUNT --order_id YOUR_ORDER_ID --page_no 1 --page_size 20
+pingpong --env production transactions list --source GENERAL_ACCOUNT --order_id YOUR_ORDER_ID --page_no 1 --page_size 20
 ```
 
 For arrays or other filters, use a complete JSON object with --args or --args-file, not mixed with business parameter flags.
 
 ## Connection and execution
 
-Use the user's selected PingPong environment and account. In a plugin session, use its authenticated MCP connection. If the user explicitly chooses the CLI, use the commands below with that environment; do not silently switch connectors or environments. Skill installation and CLI login do not authenticate another MCP client.
+Use the user's selected PingPong environment and account. In a plugin session, use its authenticated MCP connection. If the user explicitly chooses the CLI, use the production MCP unified entry and the business environment selected during browser authorization; do not silently switch connectors. Skill installation and CLI login do not authenticate another MCP client.
 
 Read the live tool schema before execution and use only supported snake_case arguments. If it differs from this guide, follow the live contract and report the mismatch. Do not pass tokens, app secrets, private keys, gateway URLs, or signatures as business arguments. The server supplies upstream credentials.
 
@@ -64,3 +64,4 @@ Respect an explicit page request exactly. For a simple lookup with no page prefe
 - TOOL_NOT_ALLOWED / SCOPE_INSUFFICIENT: report the denied tool/scope and stop that query. Do not bypass it through another connector or repeatedly reauthorize. Tool discovery is not proof of permission.
 - 401: use the chosen connector's login flow if the user wants to renew the session. A 403 from downstream /v2/token/get indicates that upstream authentication or access was denied; check server credentials and access policies; report sanitized diagnostics to the maintainer instead of repeatedly logging in.
 - Validation failure: correct only identified invalid inputs. For transient failures, use a bounded retry only if appropriate; keep partial results marked incomplete. Never report a failed query as an empty result.
+- 429 / rate limited or tool_rate: stop parallel pagination. Do not retry the same wide-range page loop. Report the reported wait time, then narrow the period to day or week segments and use `page_size=100` with sequential pages. A monthly report with many rows may not be retrievable page-by-page in one run.

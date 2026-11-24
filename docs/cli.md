@@ -8,7 +8,7 @@ Access your PingPong account data from the command line. The CLI provides balanc
 
 This guide covers the standalone CLI. For the MCP plugin and Skills, see the [marketplace README](../README.md). CLI and plugin are installed and authorized independently.
 
-The default environment is **demo (sandbox)**. Select production with `--env production`. Current operations are read-only; available tools and permissions depend on the connected server.
+The CLI still supports connecting directly to the demo MCP. For the unified entry flow, keep it connected to the production MCP and choose sandbox or production business data in the browser authorization page. The CLI still defaults to demo when `--env` is omitted, so explicitly use `--env production` for this flow. Current operations are read-only; available tools and permissions depend on the authorized business environment and connected server.
 
 ## Contents
 
@@ -33,7 +33,7 @@ Installing the CLI does not require a specific account role. Sign-in and account
 - A reachable MCP endpoint and an account able to complete browser authorization.
 - An OS credential vault: macOS Keychain, or Linux Secret Service (`secret-tool`) installed and unlocked. Windows and headless environments without a vault fail explicitly; only set `PLATFORM_MCP_CREDENTIAL_STORE=file` after accepting the weaker file-storage tradeoff.
 
-The CLI is a Node.js package, not a platform-specific native binary. The default demo endpoint is `https://demo-mcp.pingpongx.com/mcp`; production uses `https://mcp.pingpongx.com/mcp`. If your deployment differs, override the environment URL variable or pass `--url`.
+The CLI is a Node.js package, not a platform-specific native binary. The production endpoint for the unified entry is `https://mcp.pingpongx.com/mcp`; direct demo access uses `https://demo-mcp.pingpongx.com/mcp`. If your deployment differs, override the environment URL variable or pass `--url`. `--env production` selects the MCP/OAuth service entry. The sandbox or production environment selected in the browser determines the business authorization record and subsequent data environment; these are separate choices.
 
 ## Install
 
@@ -95,18 +95,17 @@ Completion supplies static command and option candidates without querying remote
 
 ## Authenticate and inspect identity
 
-### Sign in to sandbox
+### Authorize sandbox or production business data through the unified production entry
 
-Sign in to the default demo endpoint directly:
+Keep the CLI connected to the production MCP and choose the business environment in the browser authorization page. Client registration, authorization-code issuance, and token exchange then stay on the production MCP OAuth service; choosing sandbox controls where the business grant is stored and which data environment is used.
 
 ```sh
-pingpong --env demo auth login
+pingpong --env production auth login
 ```
 
-To use another sandbox endpoint, override `PLATFORM_MCP_DEMO_URL` before signing in:
+Do not start this unified flow through the demo MCP: its authorization request may be routed to test or production by `client_id`, leaving the CLI to redeem the code at a different OAuth endpoint. Use direct demo access only for isolated demo troubleshooting; it is not the same as choosing sandbox business data through the unified production entry.
 
 ```sh
-export PLATFORM_MCP_DEMO_URL=https://your-demo-domain.example/mcp
 pingpong --env demo auth login
 ```
 
@@ -114,7 +113,7 @@ pingpong --env demo auth login
 
 Each environment profile supports an optional `authorizationEndpoint`. Override it with `PLATFORM_MCP_DEMO_AUTHORIZATION_ENDPOINT` or `PLATFORM_MCP_PRODUCTION_AUTHORIZATION_ENDPOINT`. When unset or empty, the CLI uses the authorization endpoint from OAuth metadata.
 
-Only the browser login URL changes. Client registration and token exchange still use the discovered OAuth server; `state`, PKCE, `scope`, `resource`, and `bu=open-platform` remain attached. The configured page must support this OAuth handoff.
+Only the browser login URL changes. Client registration and token exchange still use the discovered OAuth server. For the unified entry, override only the production profile and keep it on the production authorization flow; do not point it to test or demo. `state`, PKCE, `scope`, `resource`, and `bu=open-platform` remain attached. The configured page must support this OAuth handoff.
 
 ### Sign in to production
 
@@ -123,12 +122,12 @@ export PLATFORM_MCP_PRODUCTION_URL=https://mcp.pingpongx.com/mcp
 pingpong --env production auth login
 ```
 
-Complete user sign-in, associated account selection, and tool authorization in your browser. The CLI uses the authorization page configured for the environment. Production defaults to `https://oauth.pingpongx.com/auth/authorize/mcp/environment?bu=open-platform`; override it with `PLATFORM_MCP_PRODUCTION_AUTHORIZATION_ENDPOINT`. OAuth uses authorization code flow with PKCE S256 and a local callback.
+Complete sign-in, choose sandbox or production business data, select the associated account, and authorize tools in your browser. The CLI uses the production MCP OAuth service. Production defaults to `https://oauth.pingpongx.com/auth/authorize/mcp/environment?bu=open-platform`; override it with `PLATFORM_MCP_PRODUCTION_AUTHORIZATION_ENDPOINT`. OAuth uses authorization code flow with PKCE S256 and a local callback. The business environment selected on the page is independent of the MCP entry selected by `--env production`.
 
 If the browser does not open automatically:
 
 ```sh
-pingpong --env demo auth login --no-browser
+pingpong --env production auth login --no-browser
 ```
 
 Open the printed URL on the machine running the CLI. In a remote terminal or container, localhost may refer to a different machine; ensure the callback is reachable.
@@ -136,7 +135,7 @@ Open the printed URL on the machine running the CLI. In a remote terminal or con
 ### Inspect your signed-in identity
 
 ```sh
-pingpong --env demo auth whoami
+pingpong --env production auth whoami
 pingpong --env production auth whoami
 ```
 
@@ -157,7 +156,7 @@ Missing, expired, or URL-mismatched credentials produce `loggedIn: false`, `iden
 For local authentication status without identity claims:
 
 ```sh
-pingpong --env demo auth status
+pingpong --env production auth status
 ```
 
 ### Environments and credentials
@@ -169,7 +168,7 @@ pingpong --env demo auth status
 
 Environment precedence is `--env` > `PLATFORM_MCP_ENV` > demo. With explicit environment selection, URL precedence is `--url` > the environment URL variable > bundled configuration; the legacy `PLATFORM_MCP_URL` is ignored. Without explicit selection, that legacy variable remains supported and takes precedence over the demo URL variable. Remote endpoints require HTTPS.
 
-Credentials are isolated by the complete MCP URL and stored in the OS credential vault by default; `~/.platform-mcp/` holds only non-sensitive markers. Override the marker directory with `PLATFORM_MCP_CONFIG_DIR`. Set `PLATFORM_MCP_CREDENTIAL_STORE=file` explicitly to store plaintext credentials there instead; file mode uses a 0700 directory and 0600 file and does not isolate other processes running as the same OS user. Legacy JSON credentials are migrated to the OS vault on first read. Sign-in requires DPoP and does not fall back to Bearer. Refresh tokens are not currently supported; sign in again after expiry. The CLI does not read or modify credentials held by Codex, ChatGPT, or other clients.
+Credentials are isolated by the complete MCP URL and stored in the OS credential vault by default; `~/.platform-mcp/` holds only non-sensitive markers. Override the marker directory with `PLATFORM_MCP_CONFIG_DIR`. Set `PLATFORM_MCP_CREDENTIAL_STORE=file` explicitly to store plaintext credentials there instead; file mode uses a 0700 directory and 0600 file and does not isolate other processes running as the same OS user. Legacy JSON credentials are migrated to the OS vault on first read. Sign-in requires DPoP and does not fall back to Bearer. The CLI does not currently store refresh tokens; sign in again when the access token expires. The server authorization session has a 7-day absolute lifetime, refresh tokens cannot extend it, and re-authorization is required after expiry. The CLI does not read or modify credentials held by Codex, ChatGPT, or other clients.
 
 ## Commands
 
@@ -191,15 +190,15 @@ pingpong --help
 pingpong --tree
 pingpong balances --tree
 pingpong balances list --help
-pingpong --env demo tools list
-pingpong --env demo tools describe list_account_balances
+pingpong --env production tools list
+pingpong --env production tools describe list_account_balances
 ```
 
 ### Query balances
 
 ```sh
-pingpong --env demo balances list --page_no 1 --page_size 1
-pingpong --env demo tools call list_account_balances \
+pingpong --env production balances list --page_no 1 --page_size 1
+pingpong --env production tools call list_account_balances \
   --args '{"page_no":1,"page_size":1}'
 ```
 
@@ -208,7 +207,7 @@ These are alternative entry points for the same query; you do not need to execut
 ### Preview requests
 
 ```sh
-pingpong --env demo balances list --page_no 1 --page_size 1 --dry-run
+pingpong --env production balances list --page_no 1 --page_size 1 --dry-run
 ```
 
 `--dry-run` previews the MCP request locally. It requires a target URL but does not access the network, read credentials, or validate complete business rules or permissions.
@@ -216,7 +215,7 @@ pingpong --env demo balances list --page_no 1 --page_size 1 --dry-run
 Server-side preview requires authentication:
 
 ```sh
-pingpong --env demo tools call list_account_balances \
+pingpong --env production tools call list_account_balances \
   --args '{"page_no":1,"page_size":1,"dry_run":true}'
 ```
 
@@ -225,7 +224,7 @@ The JSON argument `dry_run` invokes the MCP server for validation and a downstre
 ### Compact JSON and file input
 
 ```sh
-pingpong --env demo balances list --page_no 1 --page_size 1 --compact
+pingpong --env production balances list --page_no 1 --page_size 1 --compact
 ```
 
 Alternatively, save arguments as `request.json`:
@@ -235,7 +234,7 @@ Alternatively, save arguments as `request.json`:
 ```
 
 ```sh
-pingpong --env demo tools call list_account_balances --args-file request.json
+pingpong --env production tools call list_account_balances --args-file request.json
 ```
 
 `--args`, `--args-file`, and business-parameter flags are mutually exclusive. Results go to stdout; errors and sign-in prompts go to stderr. Tool results with `isError=true` are still printed as JSON and produce exit code 1. Inspect the actual result; HTTP success alone does not establish a successful query.
@@ -243,7 +242,7 @@ pingpong --env demo tools call list_account_balances --args-file request.json
 ### Inspect schemas
 
 ```sh
-pingpong --env demo balances list --schema-only
+pingpong --env production balances list --schema-only
 ```
 
 `--api-schema-only` is an alias. Both require authentication and return the MCP tool schema, not OpenAPI, without executing the tool. The server may not provide outputSchema; some enums and cross-field rules require consulting help and server validation messages.
@@ -264,7 +263,7 @@ Current operations are read-only, with no write confirmation flow. `--confirm`, 
 ## Sign out, revoke access, and uninstall
 
 ```sh
-pingpong --env demo auth logout
+pingpong --env production auth logout
 ```
 
 This revokes the current server session and removes local credentials for the selected URL. A failed remote revocation is reported explicitly with a nonzero exit status. Missing local credentials do not prove that earlier grants were revoked. The CLI revokes only the current session; contact your service maintainer to revoke other sessions.
